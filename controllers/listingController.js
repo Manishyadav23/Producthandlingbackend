@@ -48,26 +48,37 @@ exports.getListingById = async (req, res) => {
 
 exports.updateListing = async (req, res) => {
   try {
-    const imagePaths = req.files ? req.files.map(file => file.path) : [];
+    const imageUrls = [];
 
+    if (req.files && req.files.length > 0) {
+      for (let file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path);
+        imageUrls.push(result.secure_url); 
+      }
+    }
+
+    
     const updatedData = {
       ...req.body,
     };
 
-    if (imagePaths.length > 0) {
-      updatedData.images = imagePaths;
+    if (imageUrls.length > 0) {
+      updatedData.images = imageUrls; 
     }
 
     const listing = await Listing.findByIdAndUpdate(req.params.id, updatedData, { new: true });
 
-    if (!listing) return res.status(404).json({ error: "Listing not found" });
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
 
     res.status(200).json({ message: "Listing updated successfully", listing });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error while updating listing." });
   }
 };
-
 
 exports.deleteListing = async (req, res) => {
   try {
