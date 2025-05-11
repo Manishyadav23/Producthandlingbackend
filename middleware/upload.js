@@ -1,24 +1,15 @@
 const multer = require('multer');
-const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('./cloudinary'); 
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); 
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'olx-products', 
+    allowed_formats: ['jpg', 'png', 'jpeg'],
   },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPG, PNG, and JPEG are allowed.'), false);
-  }
-};
-
-const upload = multer({ storage, fileFilter }).array('images', 3); 
+const upload = multer({ storage }).array('images', 3);
 
 module.exports = upload;
